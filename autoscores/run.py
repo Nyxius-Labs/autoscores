@@ -80,6 +80,17 @@ def jobs(app, X17, X28):
         yf = y.copy()
         yf[k] = 1 - yf[k]
         out.append((f"flip{k:02d}", "gp_ard", X17, lab, yf, 0))
+    rng_w = np.random.default_rng(2018)  # simulated single experts from Walsh (2018), Table 1
+    zeros = np.flatnonzero(y == 0)
+    for b in range(200):  # each draws a count of 'automatable' labels; fewest changes reach it
+        m, sd = (29.0, 10.1) if rng_w.random() < 101 / 301 else (31.1, 10.8)
+        n = int(np.clip(np.rint(rng_w.normal(m, sd)), 0, len(lab)))
+        yf = y.copy()
+        if n < len(ones):
+            yf[rng_w.choice(ones, len(ones) - n, replace=False)] = 0
+        elif n > len(ones):
+            yf[rng_w.choice(zeros, n - len(ones), replace=False)] = 1
+        out.append((f"walsh_{b:03d}", "gp_ard", X17, lab, yf, b))
     for kind in ["gp_iso", "gp_rq", "logit", "forest", "boost", "svm"]:
         out.append((f"model_{kind}", kind, X17, lab, y, 0))
     out.append(("onet2023", "gp_ard", X28, lab, y, 0))
@@ -112,6 +123,8 @@ def main():
     probs = pd.DataFrame(np.column_stack(res), index=socs, columns=[j[0] for j in js])
     probs.insert(0, "published", app.prob.values)
     probs.to_csv(OUT / "probs.csv")
+    pd.DataFrame([(j[0], j[1], len(j[3]), int(j[4].sum())) for j in js],
+                 columns=["run", "model", "n_labels", "n_automatable"]).to_csv(OUT / "runs.csv", index=False)
     lab = np.flatnonzero(app.label.notna().values)
     y = app.label.values[lab].astype(int)
     kinds = ["gp_ard", "gp_iso", "gp_rq", "logit", "forest", "boost", "svm"]

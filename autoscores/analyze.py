@@ -22,6 +22,7 @@ FAMILIES = {  # run-name prefix -> description
     "rflip3": "3 random labels changed",
     "rflip7": "7 random labels changed",
     "down7": "7 'automatable' labels changed to 'not'",
+    "walsh": "simulated single experts (Walsh 2018 counts)",
     "model_": "other classifiers",
     "onet2023": "O*NET 2023 inputs",
 }
@@ -105,6 +106,9 @@ def main():
         return lo, hi, (lo < HI) & (hi >= HI)
 
     auc = pd.read_csv(OUT / "auc.csv", index_col=0).auc
+    runs = pd.read_csv(OUT / "runs.csv", index_col=0)
+    wl = fam("walsh").join(runs.n_automatable)
+    bins = wl.groupby(pd.cut(wl.n_automatable, [0, 20, 25, 29, 33, 37, 45, 70]), observed=True).high.median()
     L = ["# Results", "",
          "Ranges are min to max for fewer than 20 refits, otherwise the middle 90%.", "",
          "## 1. Reproduction",
@@ -123,16 +127,26 @@ def main():
     L += ["",
           f"- One label changed: employment that changes side of 0.7, median {m.median():.1%}, max {m.max():.1%}.",
           f"- 7 random labels changed: median {moved('rflip7').median():.1%}; "
-          f"7 'automatable' labels changed to 'not': median {moved('down7').median():.1%}.",
+          f"7 'automatable' labels changed to 'not': median {moved('down7').median():.1%}; "
+          f"simulated single experts: median {moved('walsh').median():.1%}.",
+          f"- Simulated single experts: median high-risk share {fam('walsh').high.median():.0%}; "
+          f"{(fam('walsh').high < 0.3).mean():.0%} of them below 30%, {(fam('walsh').high > 0.45).mean():.0%} above 45%.",
+          f"- Simulated single experts: rank correlation of the number of 'automatable' labels with the high-risk "
+          f"share {wl.n_automatable.corr(wl.high, method='spearman'):.2f}. Median share by number of 'automatable' "
+          "labels: " + "; ".join(f"{iv.left + 1}-{iv.right}: {v:.0%}" for iv, v in bins.items()) + "; "
+          f"29-31 (the survey average): {wl[wl.n_automatable.between(29, 31)].high.median():.0%}.",
           "- Classifiers (high-risk share, held-out AUC): " + "; ".join(
               f"{k}: {sh.loc['model_' + k, 'high']:.0%}, {auc[k]:.2f}" for k in auc.index if k != "gp_ard") + ".",
           "", "## 3. Occupations"]
-    for k in ["sub60", "rflip7", "down7"]:
+    for k in ["sub60", "rflip7", "down7", "walsh"]:
         lo, hi, st = interval(k)
         L.append(f"- {FAMILIES[k]}: median 90% interval width {(hi - lo).median():.2f}; "
                  f"{(w * st).sum() / w.sum():.0%} of employment in occupations whose interval contains 0.7.")
     F = probs.filter(regex="^flip")
     labeled = app[app.label.notna()].reset_index()
+    tw = labeled.index[labeled.title.str.contains("Technical Writer")][0]
+    L.append(f"- Technical writers (labeled automatable; 31% of Walsh's experts agreed): relabeling them moves "
+             f"the high-risk share from {sh.loc['base', 'high']:.1%} to {sh.loc[f'flip{tw:02d}', 'high']:.1%}.")
     for soc in ["41-2031", "43-4051"]:
         k = F.loc[soc].idxmin()
         L.append(f"- {app.title[soc]}: published {probs.published[soc]:.2f}; lowest after one change "
@@ -145,10 +159,12 @@ def main():
                       "emp2012_m": lk.set_index("soc").acs12.map(e12) / 1e6})[exact.values]
     t.sort_values("emp2012_m", ascending=False).head(10).round(3).to_csv(OUT / "table1.csv")
 
-    def neg(col):
-        return (sh[col].dropna() < 0).mean()
+    rf = sh.drop("published")  # refits only
 
-    n = sh.slope.notna().sum()
+    def neg(col):
+        return (rf[col].dropna() < 0).mean()
+
+    n = rf.slope.notna().sum()
     L += ["", "## 4. Employment change",
           f"- Outcome: log employment change, weighted by 2012 employment; {int(sh.loc['base', 'groups'])} occupation "
           f"groups for 2012-2023, {int(sh.loc['base', 'groups19'])} for 2012-2019 (1% tails clipped).",
@@ -157,7 +173,7 @@ def main():
         L.append(f"| {r} | {sh.loc[r, 'slope']:.3f} ({sh.loc[r, 'slope_se']:.3f}) | "
                  f"{sh.loc[r, 'slope_routine']:.3f} ({sh.loc[r, 'slope_routine_se']:.3f}) | "
                  f"{sh.loc[r, 'slope19']:.3f} ({sh.loc[r, 'slope19_se']:.3f}) |")
-    for k in ["flip", "sub60", "rflip7", "down7", "model_", "onet2023"]:
+    for k in ["flip", "sub60", "rflip7", "down7", "walsh", "model_", "onet2023"]:
         L.append(f"| {FAMILIES[k]} | {q(k, 'slope', '{:.3f}')} | {q(k, 'slope_routine', '{:.3f}')} | "
                  f"{q(k, 'slope19', '{:.3f}')} |")
     sp = lambda f: probs.filter(regex=f).corrwith(probs.base, method="spearman")
@@ -165,8 +181,9 @@ def main():
           f"- Refits with a negative slope ({n} refits): 2012-2023 {neg('slope'):.0%}; with routine control "
           f"{neg('slope_routine'):.0%}; 2012-2019 {neg('slope19'):.0%}.",
           f"- Refits with slope more than 1.96 SE below zero, 2012-2023: "
-          f"{((sh.slope + 1.96 * sh.slope_se) < 0).sum() / n:.0%}; with routine control: "
-          f"{((sh.slope_routine + 1.96 * sh.slope_routine_se) < 0).sum() / n:.0%}.",
+          f"{((rf.slope + 1.96 * rf.slope_se) < 0).sum() / n:.0%}; with routine control: "
+          f"{((rf.slope_routine + 1.96 * rf.slope_routine_se) < 0).sum() / n:.0%}.",
+          f"- Counts: negative 2012-2023 {(rf.slope < 0).sum()} of {n}; 2012-2019 {(rf.slope19 < 0).sum()} of {n}.",
           f"- Rank correlation with the refit: classifiers {sp('^model_').min():.2f} to {sp('^model_').max():.2f}; "
           f"O*NET 2023 {probs.onet2023.corr(probs.base, method='spearman'):.2f}; "
           f"7 random labels changed (median) {sp('^rflip7').median():.2f}."]

@@ -24,9 +24,9 @@ labels. A widely used example is the set of automation scores that Frey and Osbo
 occupations from 70 occupations they labeled by hand. The scores support the estimate that 47\% of US
 employment is at high risk of automation. We refit their classifier from public files and changed the
 labels, the classifier and the input data. Changing a single label moves the high-risk share between
-37\% and 50\%. Changing labels toward the judgments of a later expert survey lowers it to between 19\%
-and 36\%. For about half of employment, whether an occupation falls above the cutoff depends on the
-labels. The ordering of occupations is steadier: in every refit, occupations with higher scores lost
+37\% and 50\%. Across 200 simulated experts drawn from a later survey, the share follows how many of the 70
+occupations the expert calls automatable; at the experts' average of 29 to 31, it is about 27\%. For about half of employment, whether an occupation falls above the cutoff depends on the
+labels. The ordering of occupations is steadier: in 846 of 848 refits, occupations with higher scores lost
 employment between 2012 and 2023.
 \end{abstract}
 
@@ -47,14 +47,11 @@ that sentence.
 
 Earlier work changed other parts of the design. \citet{arntz2016} and \citet{nedelkoska2018} moved from
 occupations to individual jobs. \citet{lorenz2023} collected new labels in Austria and compared model
-families. \citet{coelli2019} asked whether the published scores predict employment change. Methods for
-regressions on machine-learned variables \citep{wang2020, fong2021, battaglia2024} correct
-downstream estimates with a random sample of correctly labeled cases. No such sample exists here,
-because the labels are forecasts. What a researcher can do is measure how much the scores depend on
-them.
+families. \citet{coelli2019} asked whether the published scores predict employment change. Corrections for regressions on machine-learned variables \citep{wang2020, fong2021, battaglia2024}
+need a sample of correctly labeled cases. None exists here, because the labels are forecasts.
 
 Section~3 reports three results in turn: (1) the share of employment at high risk depends on a few
-labels; (2) for about half of employment, an occupation's side of the 0.7 cutoff depends on the labels;
+labels, and mostly on how many are marked automatable; (2) for about half of employment, an occupation's side of the 0.7 cutoff depends on the labels;
 (3) the ordering of occupations holds, and it predicts later employment change.
 
 \section{Data and methods}
@@ -76,8 +73,10 @@ scores put 44.5\% of employment at high risk, close to the 47\% the authors foun
 \item \emph{Several labels:} 7 labels (10\%) reversed at random, 100 times; or a random 60 of the 70
 used for training, 200 times.
 \item \emph{Labels toward expert opinion:} \citet{walsh2018} asked about 300 AI and robotics experts to
-label the same 70 occupations; on average they marked 29 to 31 as automatable, against 37. We switch 7
-random ``automatable'' labels to ``not'', 100 times.
+label the same 70 occupations; on average they marked 29 to 31 as automatable (standard deviation 10),
+against 37. He reports these counts, not each expert's labels. We switch 7 random ``automatable'' labels
+to ``not'', 100 times. We also simulate 200 single experts: each draws a count from Walsh's reported
+distributions, and we make the fewest label changes that reach it.
 \item \emph{Classifier and data:} six other classifiers, and O*NET 28.0 (2023) in place of 17.0.
 \end{itemize}
 
@@ -89,7 +88,7 @@ by employment. For each occupation we ask whether its 90\% interval across refit
 \subsection{The high-risk share depends on a few labels}
 Figure~\ref{fig:main} (left) shows the high-risk share in each refit. Reversing one label moves it
 between 37\% and 50\%. Reversing 7 at random moves it between 28\% and 49\% (middle 90\% of refits).
-Moving labels toward the expert survey lowers it to between 19\% and 36\%. The six other classifiers
+The six other classifiers
 predict held-out labels about as well as the original (area under the curve 0.85 to 0.91), yet give
 shares from 37\% to 51\%.
 
@@ -98,6 +97,21 @@ of. Many large occupations lie between labeled occupations of opposite kinds, so
 move the classifier's boundary across them. For example, relabeling claims adjusters as not automatable
 lowers the score of retail salespersons, the largest occupation, from 0.92 to 0.38. Predicting held-out
 labels measures agreement only among the labeled occupations, so it cannot reveal this.
+
+For the simulated experts, the share depends mostly on how many occupations each marks automatable.
+Figure~\ref{fig:count} plots the two; the rank correlation is 0.97. An expert at the survey average of
+29 to 31 gives a median share of 27\%, and one who marks 25 or fewer usually gives under 5\%. Fewer
+``automatable'' labels should give fewer high-risk jobs; the point is the size. Removing a fifth of the
+``automatable'' labels removes about two fifths of the high-risk share, so the 47\% figure largely
+reflects how often the labelers said ``automatable''.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{figure2.png}
+\caption{High-risk share against the number of occupations labeled automatable, for 200 simulated
+experts. The gray band is the average in \citet{walsh2018}.}
+\label{fig:count}
+\end{figure}
 
 \subsection{Half of employment is near the cutoff}
 The same instability holds for single occupations. When 7 random labels change, 53\% of 2012
@@ -134,14 +148,14 @@ Although the level of each score moves, the order of occupations changes less: t
 have a rank correlation of 0.82 to 0.88 with the original. Figure~\ref{fig:main}
 (right) relates the scores to what happened next. With the published scores, an occupation scored 1
 grew about 23 log points less from 2012 to 2023 than one scored 0 (standard error 0.07). The slope is
-negative in all 648 refits, though its size ranges from $-0.12$ to $-0.39$ (middle 90\%) when 7 labels change. This
+negative in 846 of 848 refits, though its size ranges from $-0.12$ to $-0.39$ (middle 90\%) when 7 labels change. This
 check agrees with \citet{coelli2019} in one respect: once we control for a routine-task index
-\citep{acemoglu2011}, the slope stays negative in 99\% of refits but is more than two standard errors
-below zero in only 61\%. Much of what the scores order is routine work.
+\citep{acemoglu2011}, the slope stays negative in 98\% of refits but is more than two standard errors
+below zero in only 57\%. Much of what the scores order is routine work.
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.88\textwidth]{figure1.png}
+\includegraphics[width=0.84\textwidth]{figure1.png}
 \caption{Share of employment at high risk (left) and slope of employment change on the score (right),
 by kind of change. Each dot is one refit.}
 \label{fig:main}
@@ -149,24 +163,21 @@ by kind of change. Each dot is one refit.}
 
 \section{Checks and limits}
 \textbf{Employment data.} Where one ACS code covers several occupations, we split its employment
-equally among them. BLS data by detailed occupation would avoid this; the published scores give a
-similar share with either source (44.5\% and 47\%).
+equally among them. The published scores give a similar share with ACS and BLS data (44.5\% and 47\%).
 
-\textbf{Random label changes.} Random reversals are a simple stand-in for disagreement between
-labelers. The expert survey suggests that 7 of 70 is a modest amount, and that actual disagreement has a
-direction, which moves the share more. We plan to collect a second set of labels from independent
-coders.
+\textbf{Simulated labels.} Walsh did not publish each expert's labels, so we choose at random which
+labels change. Because we make only the fewest changes that reach each count, two experts with the
+same count as Frey and Osborne count as agreeing; actual disagreement is larger. We plan to collect a
+second set of labels from independent coders.
 
-\textbf{Time horizon.} Frey and Osborne expected change over ``a decade or two'' and made no forecast of
-actual job losses. We use later employment only to check the ordering. Ending the window in 2019, before
-the pandemic, gives a smaller slope that is negative in every refit.
+\textbf{Time horizon.} Frey and Osborne expected change over ``a decade or two''; we use later
+employment only to check the ordering. Ending the window in 2019 gives a smaller slope, negative in 843 of
+848 refits.
 
 \section{Conclusion}
 A classifier trained on a few hand labels turns a small number of judgments into a measure for every
-case. For the Frey--Osborne scores, the 47\% figure and the class of many large occupations depend on
-those judgments; the ordering of occupations depends on them much less. Users of such scores can treat
-them as a ranking rather than as counts above a cutoff, and can report intervals from refits with
-changed labels. Agreement on held-out labels does not show that a measure is stable. Before the workshop
+case. For the Frey--Osborne scores, the 47\% figure largely reflects how many occupations the labelers
+called automatable, and the class of many large occupations depends on single labels; the ordering of occupations depends on them much less. Users can treat such scores as a ranking rather than as counts above a cutoff. Agreement on held-out labels does not show that a measure is stable. Before the workshop
 we will add a second, independent set of labels and apply the same checks to other measures built from
 hand labels. Code and the refit scores for every occupation: \url{https://github.com/brandonyee-cs/autoscores}.
 

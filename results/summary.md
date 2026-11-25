@@ -17,17 +17,22 @@ Ranges are min to max for fewer than 20 refits, otherwise the middle 90%.
 | 3 random labels changed | 100 | 33% to 48% | 0.47 to 0.57 |
 | 7 random labels changed | 100 | 28% to 49% | 0.47 to 0.59 |
 | 7 'automatable' labels changed to 'not' | 100 | 19% to 36% | 0.41 to 0.46 |
+| simulated single experts (Walsh 2018 counts) | 200 | 0% to 56% | 0.22 to 0.65 |
 | other classifiers | 6 | 37% to 51% | 0.50 to 0.53 |
 | O*NET 2023 inputs | 1 | 40% to 40% | 0.49 to 0.49 |
 
 - One label changed: employment that changes side of 0.7, median 5.9%, max 17.8%.
-- 7 random labels changed: median 16.3%; 7 'automatable' labels changed to 'not': median 24.0%.
+- 7 random labels changed: median 16.3%; 7 'automatable' labels changed to 'not': median 24.0%; simulated single experts: median 25.0%.
+- Simulated single experts: median high-risk share 28%; 54% of them below 30%, 22% above 45%.
+- Simulated single experts: rank correlation of the number of 'automatable' labels with the high-risk share 0.97. Median share by number of 'automatable' labels: 1-20: 0%; 21-25: 5%; 26-29: 18%; 30-33: 31%; 34-37: 41%; 38-45: 49%; 46-70: 57%; 29-31 (the survey average): 27%.
 - Classifiers (high-risk share, held-out AUC): boost: 51%, 0.85; forest: 37%, 0.89; gp_iso: 38%, 0.90; gp_rq: 38%, 0.90; logit: 42%, 0.90; svm: 44%, 0.91.
 
 ## 3. Occupations
 - a random 60 of the 70 labeled: median 90% interval width 0.22; 32% of employment in occupations whose interval contains 0.7.
 - 7 random labels changed: median 90% interval width 0.41; 53% of employment in occupations whose interval contains 0.7.
 - 7 'automatable' labels changed to 'not': median 90% interval width 0.37; 52% of employment in occupations whose interval contains 0.7.
+- simulated single experts (Walsh 2018 counts): median 90% interval width 0.65; 64% of employment in occupations whose interval contains 0.7.
+- Technical writers (labeled automatable; 31% of Walsh's experts agreed): relabeling them moves the high-risk share from 44.7% to 44.5%.
 - Retail Salespersons: published 0.92; lowest after one change 0.38 (relabeling Claims Adjusters, Examiners, and Investigators).
 - Customer Service Representatives: published 0.55; lowest after one change 0.35 (relabeling Civil Engineers).
 
@@ -42,9 +47,11 @@ Ranges are min to max for fewer than 20 refits, otherwise the middle 90%.
 | a random 60 of the 70 labeled | -0.265 to -0.172 | -0.226 to -0.108 | -0.141 to -0.072 |
 | 7 random labels changed | -0.385 to -0.124 | -0.340 to -0.026 | -0.211 to -0.040 |
 | 7 'automatable' labels changed to 'not' | -0.336 to -0.175 | -0.302 to -0.092 | -0.189 to -0.068 |
+| simulated single experts (Walsh 2018 counts) | -0.526 to -0.131 | -0.406 to 0.016 | -0.274 to -0.031 |
 | other classifiers | -0.250 to -0.139 | -0.206 to -0.068 | -0.131 to -0.053 |
 | O*NET 2023 inputs | -0.140 to -0.140 | -0.065 to -0.065 | -0.044 to -0.044 |
 
-- Refits with a negative slope (649 refits): 2012-2023 100%; with routine control 99%; 2012-2019 100%.
-- Refits with slope more than 1.96 SE below zero, 2012-2023: 91%; with routine control: 61%.
+- Refits with a negative slope (848 refits): 2012-2023 100%; with routine control 98%; 2012-2019 99%.
+- Refits with slope more than 1.96 SE below zero, 2012-2023: 88%; with routine control: 57%.
+- Counts: negative 2012-2023 846 of 848; 2012-2019 843 of 848.
 - Rank correlation with the refit: classifiers 0.82 to 0.88; O*NET 2023 0.80; 7 random labels changed (median) 0.88.

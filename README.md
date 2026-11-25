@@ -19,6 +19,7 @@ Pilot for the Yale workshop *AI for Social Science Research Methods* (April 2027
 | a random 60 of the 70 labeled (200 refits) | 39% to 50% |
 | 7 random labels changed (100 refits) | 28% to 49% |
 | 7 "automatable" labels changed to "not" (100 refits) | 19% to 36% |
+| simulated single experts from Walsh (2018) (200 refits) | 0% to 56%; 27% at the experts' average |
 | other classifiers (6) | 37% to 51% |
 | O*NET 2023 data in place of 2012 | 40% |
 
@@ -27,10 +28,14 @@ Ranges with 100+ refits are the middle 90%.
 1. The high-risk share depends on a few labels. Relabeling one occupation, claims adjusters, as not
    automatable moves retail salespersons, the largest occupation, from 0.92 to 0.38. Classifiers that
    predict held-out labels equally well (AUC 0.85 to 0.91) give shares from 37% to 51%.
+   Across simulated experts, the share follows how many of the 70 are labeled automatable (rank
+   correlation 0.97): at the experts' average of 29 to 31, it is 27% (Figure 2).
 2. When 7 random labels change, 53% of employment is in occupations whose 90% interval contains 0.7.
-3. The ordering is steadier. In all 648 refits, occupations with higher scores lost employment between
-   2012 and 2023 (ACS). With a routine-task control the slope stays negative in 99% of refits but is
-   more than two standard errors below zero in 61%.
+3. The ordering is steadier. In 846 of 848 refits, occupations with higher scores lost employment
+   between 2012 and 2023 (ACS). With a routine-task control the slope stays negative in 98% of refits but
+   is more than two standard errors below zero in 57%.
+
+![Figure 2](results/figure2.png)
 
 Full numbers: [`results/summary.md`](results/summary.md).
 
@@ -43,6 +48,8 @@ Full numbers: [`results/summary.md`](results/summary.md).
   length scale per variable. It matches the published probabilities at r = 0.99.
 - **Changes:** each label reversed in turn (70); 3 or 7 random labels reversed (100 each); 7 random
   "automatable" labels set to "not", matching the lower counts in Walsh's (2018) expert survey (100);
+  200 simulated single experts, each drawing a count of "automatable" labels from Walsh's reported
+  distributions (robotics 29.0 ± 10.1, AI 31.1 ± 10.8), with the fewest label changes that reach it;
   a random 60 of the 70 labels (200); each label left out (70); six other classifiers; O*NET 2023 inputs.
 - **Measures:** employment share with probability ≥ 0.7; each occupation's 90% interval across
   refits; slope of log employment change 2012–2023 (and 2012–2019) on probability across 406
@@ -70,17 +77,18 @@ python -m autoscores.run && python -m autoscores.analyze && python -m autoscores
 | `autoscores/features.py` | the nine O*NET variables by SOC code |
 | `autoscores/employment.py` | ACS employment by occupation → `data/emp_acs{2012,2019,2023}.csv` |
 | `autoscores/link.py` | links SOC codes to ACS codes and across the 2018 SOC revision |
-| `autoscores/run.py` | all refits → `results/probs.csv`; held-out AUC → `results/auc.csv` |
+| `autoscores/run.py` | all refits → `results/probs.csv`, `results/runs.csv`; held-out AUC → `results/auc.csv` |
 | `autoscores/analyze.py` | `results/summary.md`, `results/shares.csv`, `results/table1.csv` |
-| `autoscores/figure.py` | `results/figure1.png` |
+| `autoscores/figure.py` | `results/figure1.png`, `results/figure2.png` |
 | `paper/` | extended abstract (.tex and .md) |
 
 ## Limitations
 1. Employment comes from the ACS, not the BLS 2010 data Frey and Osborne used; with the published
    scores this gives 44.5% instead of 47%. Where one ACS code covers several occupations, its
    employment is split equally among them.
-2. Random label flips stand in for disagreement between labelers. A second, independent set of
-   labels would measure that disagreement directly.
+2. Walsh (2018) reports how many occupations each group called automatable, not each expert's labels,
+   so the simulation chooses at random which labels change and makes only the fewest changes that reach
+   each count. A second, independent set of labels would measure disagreement directly.
 3. Frey and Osborne describe a horizon of "a decade or two"; the 2012–2023 change checks only
    whether the ordering of occupations carries information.
 4. The refit uses scikit-learn's Laplace approximation, not the expectation propagation of the
