@@ -1,0 +1,11 @@
+soc,title,label,published,flip1_min,flip1_max,flip7_q05,flip7_q95,emp2012_m
+41-2031,Retail Salespersons,,0.92,0.378,0.938,0.383,0.874,3.474
+41-1011,First-Line Supervisors of Retail Sales Workers,,0.28,0.023,0.439,0.045,0.468,2.975
+43-4051,Customer Service Representatives,,0.55,0.351,0.842,0.242,0.762,2.457
+35-3031,Waiters and Waitresses,0,0.94,0.709,0.963,0.671,0.902,2.232
+13-2011,Accountants and Auditors,1,0.94,0.826,0.95,0.638,0.915,2.059
+53-7062,"Laborers and Freight, Stock, and Material Movers, Hand",,0.85,0.607,0.906,0.504,0.883,2.043
+47-2061,Construction Laborers,,0.88,0.499,0.962,0.466,0.886,1.564
+43-5081,Stock Clerks and Order Fillers,,0.64,0.299,0.914,0.36,0.889,1.56
+37-2012,Maids and Housekeeping Cleaners,0,0.69,0.445,0.924,0.462,0.854,1.534
+25-1000,Postsecondary Teachers,,0.032,0.032,0.15,0.065,0.365,1.42

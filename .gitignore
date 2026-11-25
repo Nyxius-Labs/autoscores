@@ -1,0 +1,11 @@
+raw/
+__pycache__/
+*.pyc
+.venv/
+*.aux
+*.log
+*.out
+*.bbl
+*.blg
+*.synctex.gz
+notes/
