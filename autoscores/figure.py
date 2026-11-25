@@ -1,5 +1,6 @@
-"""Figure 1: share of employment at high risk (left) and the link between scores and 2012-2023
-employment change (right), under each change to the labels, model or data.
+"""Figure 1: share of employment at high risk under each change to the labels, model or data.
+Figure 2: that share against the number of 'automatable' labels. Figure 3: slope of 2012-2023
+employment change on the score.
 
   python -m autoscores.figure
 """
@@ -15,58 +16,67 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 OUT = ROOT / "results"
 INK, MUTED, GRID, SERIES, SURF = "#0b0b0b", "#52514e", "#e4e3df", "#2a78d6", "#fcfcfb"
 ROWS = [("^flip", "One label changed\n(70 refits)"),
-        ("^sub60", "60 of the 70 labeled\n(200 refits)"),
         ("^rflip7", "7 random labels changed\n(100 refits)"),
-        ("^down7", "7 'automatable' labels\nchanged to 'not' (100)"),
-        ("^walsh", "Simulated single experts,\nWalsh 2018 (200 refits)"),
+        ("^walsh", "Simulated single experts\n(200 refits)"),
         ("^model_", "Other classifiers\n(6 refits)"),
         ("^onet2023", "O*NET 2023 data\n(1 refit)")]
+NOTE = "Each dot is one refit; black lines span the middle 90%. Dashed line: original labels."
+
+
+def style(ax, xlim, fmt, title):
+    ax.set_facecolor(SURF)
+    ax.set_xlim(*xlim)
+    ticks = [t for t in ax.get_xticks() if xlim[0] <= t <= xlim[1]]
+    ax.set_xticks(ticks)
+    ax.set_xticklabels([fmt(t) for t in ticks], fontsize=8, color=MUTED)
+    ax.set_xlim(*xlim)
+    ax.set_ylim(-0.6, len(ROWS) - 0.4)
+    ax.set_title(title, fontsize=9.5, color=INK, loc="left")
+    for s_ in ["top", "right", "left"]:
+        ax.spines[s_].set_visible(False)
+    ax.spines["bottom"].set_color(GRID)
+    ax.tick_params(axis="y", length=0)
+    ax.tick_params(axis="x", color=GRID)
+
+
+def dots(ax, sh, col, ref, rng):
+    y = np.arange(len(ROWS))[::-1]
+    for yi, (pat, _) in zip(y, ROWS):
+        v = sh.filter(regex=pat, axis=0)[col].dropna().values
+        jit = rng.uniform(-0.18, 0.18, len(v)) if len(v) > 1 else np.zeros(1)
+        ax.scatter(v, yi + jit, s=9, color=SERIES, alpha=0.35, linewidth=0, zorder=2)
+        if len(v) > 1:
+            lo, hi = np.quantile(v, [0.05, 0.95])
+            ax.hlines(yi, lo, hi, color=INK, lw=1.5, zorder=3)
+    ax.axvline(ref, color=MUTED, lw=1, ls=(0, (3, 3)), zorder=0)
+    ax.set_yticks(y)
+    ax.set_yticklabels([r[1] for r in ROWS], fontsize=8, color=INK)
 
 
 def main():
     sh = pd.read_csv(OUT / "shares.csv", index_col=0)
     rng = np.random.default_rng(0)
-    y = np.arange(len(ROWS))[::-1]
-    fig, axes = plt.subplots(1, 2, figsize=(9, 4.3), sharey=True, facecolor=SURF)
-    panels = [(axes[0], "high", "Share of 2012 employment with\nprobability of 0.7 or more", sh.loc["base", "high"],
-               (-0.015, 0.6), lambda v: f"{100 * v:.0f}%"),
-              (axes[1], "slope", "Change in log employment 2012-2023\nper unit of probability", sh.loc["base", "slope"],
-               (-0.62, 0.06), lambda v: f"{v:.2f}")]
-    for ax, col, title, ref, xlim, fmt in panels:
-        ax.set_facecolor(SURF)
-        for yi, (pat, _) in zip(y, ROWS):
-            v = sh.filter(regex=pat, axis=0)[col].dropna().values
-            if len(v) == 0:
-                continue
-            jit = rng.uniform(-0.18, 0.18, len(v)) if len(v) > 1 else np.zeros(1)
-            ax.scatter(v, yi + jit, s=10, color=SERIES, alpha=0.35, linewidth=0, zorder=2)
-            if len(v) > 1:
-                lo, hi = np.quantile(v, [0.05, 0.95])
-                ax.hlines(yi, lo, hi, color=INK, lw=1.5, zorder=3)
-        ax.axvline(ref, color=MUTED, lw=1, ls=(0, (3, 3)), zorder=0)
-        ax.text(ref + 0.006, len(ROWS) - 0.1, "original labels", ha="left", va="center", fontsize=7.5, color=MUTED)
-        if col == "slope":
-            ax.axvline(0, color=GRID, lw=1, zorder=0)
-        ax.set_xlim(*xlim)
-        ticks = ax.get_xticks()
-        ax.set_xticks(ticks)
-        ax.set_xticklabels([fmt(t) for t in ticks], fontsize=8, color=MUTED)
-        ax.set_xlim(*xlim)
-        ax.set_ylim(-0.6, len(ROWS) + 0.3)
-        ax.set_title(title, fontsize=10, color=INK, loc="left")
-        for s in ["top", "right", "left"]:
-            ax.spines[s].set_visible(False)
-        ax.spines["bottom"].set_color(GRID)
-        ax.tick_params(axis="y", length=0)
-        ax.tick_params(axis="x", color=GRID)
-    axes[0].set_yticks(y)
-    axes[0].set_yticklabels([r[1] for r in ROWS], fontsize=8.5, color=INK)
-    fig.text(0.01, 0.01, "Each dot is one refit of the Frey-Osborne classifier; black lines span the middle 90%. "
-             "Employment from the 2012 and 2023 ACS.", fontsize=7.5, color=MUTED)
-    fig.tight_layout(rect=(0, 0.04, 1, 1))
+    pct = lambda v: f"{100 * v:.0f}%"
+    # Figure 1: high-risk share under each change
+    fig, ax = plt.subplots(figsize=(5.6, 2.9), facecolor=SURF)
+    dots(ax, sh, "high", sh.loc["base", "high"], rng)
+    style(ax, (-0.015, 0.6), pct, "Share of 2012 employment with probability of 0.7 or more")
+    fig.text(0.01, 0.01, NOTE, fontsize=7, color=MUTED)
+    fig.tight_layout(rect=(0, 0.05, 1, 1))
     fig.savefig(OUT / "figure1.png", dpi=200, facecolor=SURF)
-    print("wrote", OUT / "figure1.png")
+    # Figure 3: slope of employment change on the score, without and with a routine-task control
+    fig, axes = plt.subplots(1, 2, figsize=(7.6, 2.9), sharey=True, facecolor=SURF)
+    for ax, col, title in [(axes[0], "slope", "Scores only"), (axes[1], "slope_routine", "With routine-task index")]:
+        dots(ax, sh, col, sh.loc["base", col], rng)
+        ax.axvline(0, color=MUTED, lw=0.8, zorder=0)
+        style(ax, (-0.62, 0.17), lambda v: f"{v:.1f}", title)
+    axes[1].tick_params(axis="y", labelleft=False)
+    fig.text(0.01, 0.01, NOTE + " One refit per panel lies off the right edge.",
+             fontsize=7, color=MUTED)
+    fig.tight_layout(rect=(0, 0.05, 1, 1))
+    fig.savefig(OUT / "figure3.png", dpi=200, facecolor=SURF)
     figure2(sh)
+    print("wrote figures 1-3")
 
 
 def figure2(sh):
@@ -95,7 +105,6 @@ def figure2(sh):
     ax.grid(axis="y", color=GRID, lw=0.6, zorder=0)
     fig.tight_layout()
     fig.savefig(OUT / "figure2.png", dpi=200, facecolor=SURF)
-    print("wrote", OUT / "figure2.png")
 
 
 if __name__ == "__main__":

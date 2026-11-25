@@ -11,6 +11,8 @@ Pilot for the Yale workshop *AI for Social Science Research Methods* (April 2027
 
 ![Figure 1](results/figure1.png)
 
+![Figure 3](results/figure3.png)
+
 ## Results
 | change | share of 2012 employment with probability ≥ 0.7 |
 |---|---|
@@ -79,7 +81,7 @@ python -m autoscores.run && python -m autoscores.analyze && python -m autoscores
 | `autoscores/link.py` | links SOC codes to ACS codes and across the 2018 SOC revision |
 | `autoscores/run.py` | all refits → `results/probs.csv`, `results/runs.csv`; held-out AUC → `results/auc.csv` |
 | `autoscores/analyze.py` | `results/summary.md`, `results/shares.csv`, `results/table1.csv` |
-| `autoscores/figure.py` | `results/figure1.png`, `results/figure2.png` |
+| `autoscores/figure.py` | `results/figure1.png` (share), `figure2.png` (share vs. label count), `figure3.png` (employment slope) |
 | `paper/` | extended abstract (.tex and .md) |
 
 ## Limitations
